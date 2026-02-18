@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מסלול חורף יפן | פברואר 2026 | Yamato Travel</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#0d0d1a;color:#f0e8d0;height:100vh;display:flex;flex-direction:column;direction:rtl;overflow:hidden}
+
+  #header{background:linear-gradient(135deg,#0d0d1a,#1a0a2e);border-bottom:2px solid #c9a84c;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .h-title{font-size:20px;font-weight:900;color:#c9a84c}
+  .h-sub{font-size:11px;color:#8899aa;margin-top:3px}
+  .h-brand{font-size:12px;color:#c9a84c;font-weight:700}
+
+  #filters{background:rgba(13,13,26,.97);border-bottom:1px solid rgba(201,168,76,.15);padding:7px 14px;display:flex;gap:5px;overflow-x:auto;flex-shrink:0;align-items:center}
+  .flabel{font-size:11px;color:#8899aa;white-space:nowrap;margin-left:4px}
+  .fbtn{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.3);color:#f0e8d0;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .2s}
+  .fbtn:hover{background:rgba(201,168,76,.15)}
+
+  #main{display:flex;flex:1;overflow:hidden}
+
+  #sidebar{width:240px;background:rgba(10,10,20,.98);border-left:1px solid rgba(201,168,76,.12);overflow-y:auto;flex-shrink:0;scrollbar-width:thin;scrollbar-color:#c9a84c transparent}
+  #sidebar::-webkit-scrollbar{width:4px}
+  #sidebar::-webkit-scrollbar-thumb{background:#c9a84c;border-radius:2px}
+  .dgroup{border-bottom:1px solid rgba(255,255,255,.04)}
+  .dhead{padding:8px 10px;background:rgba(255,255,255,.03);display:flex;align-items:center;gap:8px}
+  .dnum{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;color:#fff}
+  .dlabel{font-size:9px;font-weight:600;line-height:1.4}
+  .dcount{font-size:9px;color:#8899aa}
+  .sitem{padding:6px 10px 6px 16px;cursor:pointer;display:flex;gap:8px;align-items:flex-start;border-right:3px solid transparent;transition:all .15s}
+  .sitem:hover{background:rgba(201,168,76,.08)}
+  .sitem.active{background:rgba(201,168,76,.12)}
+  .sname{font-size:11px;font-weight:600;color:#f0e8d0;line-height:1.3}
+  .sact{font-size:9px;color:#8899aa;margin-top:2px;line-height:1.3}
+  .stime{font-size:9px;color:#c9a84c;margin-top:2px;font-weight:600}
+
+  #map{flex:1;z-index:1}
+
+  /* Leaflet popup override */
+  .leaflet-popup-content-wrapper{background:#0d1117 !important;border:1px solid #c9a84c !important;border-radius:12px !important;box-shadow:0 10px 40px rgba(0,0,0,0.8) !important;padding:0 !important;overflow:hidden}
+  .leaflet-popup-tip-container{display:none}
+  .leaflet-popup-close-button{color:rgba(255,255,255,.5) !important;font-size:18px !important;padding:8px 12px !important;z-index:2}
+
+  .popup-wrap{width:290px;direction:rtl;font-family:'Segoe UI',Arial,sans-serif}
+  .pop-top{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+  .pop-name{font-size:17px;font-weight:800;color:#f0e8d0;line-height:1.2}
+  .pop-sub{font-size:10px;color:#8899aa;margin-top:3px}
+  .pop-badge{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0;margin-right:8px;margin-top:2px}
+  .pop-body{padding:0 14px 12px}
+  .pop-field{margin-bottom:7px;font-size:12px}
+  .pop-field .lbl{color:#c9a84c;font-weight:700;font-size:10px;display:block;margin-bottom:2px}
+  .pop-field .val{color:#ccc;line-height:1.4}
+  .pop-time{display:inline-block;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);color:#c9a84c;padding:2px 8px;border-radius:10px;font-size:10px;margin-bottom:8px}
+  .pop-tip{background:rgba(42,157,143,.12);border-right:3px solid #2a9d8f;padding:7px 10px;border-radius:0 6px 6px 0;font-size:11px;color:#d0ece8;font-style:italic;line-height:1.5}
+  .pop-tip-lbl{color:#2a9d8f;font-weight:700;font-size:9px;margin-bottom:3px;font-style:normal}
+  .pop-divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:0 0 8px 0}
+
+  @media(max-width:600px){#sidebar{display:none}}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <div class="h-title">⛩️ מסלול חורף יפן | פברואר 2026</div>
+    <div class="h-sub">9 ימים · 21 עצירות · טוקיו · קיוטו · נארה · אוסקה · יוקוהמה</div>
+  </div>
+  <div class="h-brand">🗾</div>
+</div>
+
+<div id="filters">
+  <span class="flabel">סינון לפי יום:</span>
+  <button class="fbtn active" onclick="filterDay('all',this)">הכל</button>
+  <button class="fbtn" onclick="filterDay('1-2',this)">יום 1-2 · טוקיו</button>
+  <button class="fbtn" onclick="filterDay('3',this)">יום 3 · טוקיו</button>
+  <button class="fbtn" onclick="filterDay('4',this)">יום 4 · קיוטו</button>
+  <button class="fbtn" onclick="filterDay('5',this)">יום 5 · קיוטו</button>
+  <button class="fbtn" onclick="filterDay('6',this)">יום 6 · אוג'י</button>
+  <button class="fbtn" onclick="filterDay('7',this)">יום 7 · נארה/אוסקה</button>
+  <button class="fbtn" onclick="filterDay('8',this)">יום 8 · יוקוהמה/טוקיו</button>
+  <button class="fbtn" onclick="filterDay('9',this)">יום 9 · מפרץ טוקיו</button>
+</div>
+
+<div id="main">
+  <div id="sidebar"></div>
+  <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var trips = [
+  {day:"1-2",date:"18-19.2.26",name:"אסקוסה",en:"Asakusa",lat:35.7147,lon:139.7967,act:"מקדש סנסו-ג'י העתיק",city:"טוקיו",icon:"🏯",time:"אחה\"צ",tip:"געו בעשן הקטורת — האמונה המקומית אומרת שהוא מרפא ממחלות"},
+  {day:"3",date:"20.2.26",name:"גינזה",en:"Ginza",lat:35.6712,lon:139.7665,act:"אזור קניות יוקרתי ובניינים אדריכליים",city:"טוקיו",icon:"🛍️",time:"בוקר",tip:"אל תפספסו את בניין יוניקלו ואת חנויות האלקטרוניקה"},
+  {day:"3",date:"20.2.26",name:"הרג'וקו",en:"Harajuku",lat:35.6764,lon:139.6993,act:"מקדש מייג'י ורחוב טקשיטה",city:"טוקיו",icon:"⛩️",time:"בוקר-צהריים",tip:"שדרת אומוטה סנדו וצעירים בתלבושות קוספליי"},
+  {day:"3",date:"20.2.26",name:"שיבויה",en:"Shibuya",lat:35.6595,lon:139.7004,act:"מעבר החצייה העמוס בעולם",city:"טוקיו",icon:"🚦",time:"ערב",tip:"עלו לקומות העליונות לתצפית מדהימה על הצומת"},
+  {day:"4",date:"21.2.26",name:"מקדש היאן",en:"Heian Jingu",lat:35.0164,lon:135.7822,act:"גן מקדש שינטו מרהיב",city:"קיוטו",icon:"🌸",time:"בוקר",tip:"הגן הפנימי — שלווה מופלאה"},
+  {day:"4",date:"21.2.26",name:"שוק נישיקי",en:"Nishiki Market",lat:35.0050,lon:135.7649,act:"שוק האוכל המסורתי של קיוטו",city:"קיוטו",icon:"🍜",time:"צהריים",tip:"נסו חמוצים יפניים וממתקי מאצ'ה טריים"},
+  {day:"4",date:"21.2.26",name:"מצודת ניג'ו",en:"Nijo Castle",lat:35.0142,lon:135.7482,act:"ארמון השוגון טוקוגאווה",city:"קיוטו",icon:"🏰",time:"אחה\"צ",tip:"שימו לב לרצפות הזמיר הציוציות — מנגנון אזעקה מלפני 400 שנה"},
+  {day:"4",date:"21.2.26",name:"פגישה עם גיישה",en:"Geisha Meeting",lat:35.0037,lon:135.7757,act:"פגישה פרטית עם גיישה בגיון",city:"קיוטו",icon:"👘",time:"ערב",tip:"חוויה נדירה ביותר — שיחה ישירה על עולמן המסתורי"},
+  {day:"5",date:"22.2.26",name:"ריואנג'י",en:"Ryoanji",lat:35.0335,lon:135.7178,act:"גן הסלעים הזן המפורסם",city:"קיוטו",icon:"🪨",time:"בוקר מוקדם",tip:"שבו בשקט מול 15 הסלעים — לא ניתן לראות את כולם בו-זמנית"},
+  {day:"5",date:"22.2.26",name:"מקדש הזהב",en:"Kinkakuji",lat:35.0394,lon:135.7292,act:"המקדש המוזהב על האגם",city:"קיוטו",icon:"✨",time:"בוקר",tip:"גולת הכותרת של קיוטו — צלמו את ההשתקפות בבוקר"},
+  {day:"5",date:"22.2.26",name:"קיומיזודרה",en:"Kiyomizudera",lat:34.9949,lon:135.7850,act:"תצפית על קיוטו ומעיין הרפואה",city:"קיוטו",icon:"🏔️",time:"אחה\"צ",tip:"טיילו בסמטאות ניננזאקה וסננזאקה — הזמן עצר שם"},
+  {day:"6",date:"23.2.26",name:"פושימי אינארי",en:"Fushimi Inari",lat:34.9671,lon:135.7727,act:"אלפי שערי טוריי אדומים",city:"קיוטו",icon:"⛩️",time:"בוקר",tip:"לכו אל מחוץ לשטחים התיירותיים — שלווה מרהיבה"},
+  {day:"6",date:"23.2.26",name:"אוג'י",en:"Uji",lat:34.8893,lon:135.8016,act:"עיר התה הירוק היפני",city:"אוג'י",icon:"🍵",time:"צהריים",tip:"טעימת תה מאצ'ה איכותי בבית תה מסורתי"},
+  {day:"6",date:"23.2.26",name:"מבשלת סאקה",en:"Sake Brewery - Fushimi",lat:34.9390,lon:135.7580,act:"מבשלת סאקה בפושימי",city:"פושימי, קיוטו",icon:"🍶",time:"אחה\"צ",tip:"פושימי היא בירת הסאקה של יפן — טעימה ישירה מהחביות המסורתיות"},
+  {day:"7",date:"24.2.26",name:"נארה",en:"Nara",lat:34.6851,lon:135.8430,act:"הבודהה הגדול ופארק הצבאים",city:"נארה",icon:"🦌",time:"בוקר",tip:"האכילו את הצבאים — שליחי האלים המשתחווים"},
+  {day:"7",date:"24.2.26",name:"אוסקה - דוטונבורי",en:"Dotonbori",lat:34.6687,lon:135.5013,act:"רובע האוכל וחיי הלילה",city:"אוסקה",icon:"🦑",time:"ערב",tip:"חובה: טאקויאקי טרי תחת שלטי הניאון"},
+  {day:"8",date:"25.2.26",name:"מוזיאון הראמן",en:"Ramen Museum",lat:35.4825,lon:139.6318,act:"מוזיאון הראמן הנוסטלגי",city:"יוקוהמה",icon:"🍜",time:"בוקר",tip:"טעמו מנות מיני מכל העמדות בסגנון יפן ה-50'"},
+  {day:"8",date:"25.2.26",name:"שוק אמה-יוקו",en:"Ameyoko",lat:35.7089,lon:139.7745,act:"שוק היסטורי מתקופת הכיבוש",city:"טוקיו",icon:"🛒",time:"צהריים",tip:"שוק פעיל במיוחד בשעות הצהריים"},
+  {day:"8",date:"25.2.26",name:"שינג'וקו",en:"Shinjuku",lat:35.6897,lon:139.7006,act:"תצפית ממגדל העירייה + חיי לילה",city:"טוקיו",icon:"🌃",time:"ערב",tip:"מגדל העירייה פתוח חינם — תצפית לילית מרהיבה"},
+  {day:"9",date:"26.2.26",name:"TeamLab טויוסו",en:"teamLab Planets",lat:35.6405,lon:139.7954,act:"מיצג אמנות דיגיטלי מרהיב",city:"טוקיו",icon:"🌈",time:"בוקר",tip:"הלכו יחפים בתוך מי המראה — חיים בתוך ציור"},
+  {day:"9",date:"26.2.26",name:"מקדש נזו",en:"Nezu Shrine",lat:35.7206,lon:139.7613,act:"שערים אדומים ופרידה מיפן",city:"טוקיו",icon:"⛩️",time:"צהריים",tip:"פרידה מיפן בשקט — מהמקדשים היפים והפחות מוכרים"}
+];
+
+var hotels = [
+  {name:"Hotel Metropolitan Tokyo", nameHe:"מלון מטרופוליטן טוקיו", lat:35.7295, lon:139.7100, city:"איקבוקורו, טוקיו", days:"ימים 1-3", note:"1-6-1 Nishi-Ikebukuro, Toshima-ku"},
+  {name:"Keio Prelia Hotel Kyoto", nameHe:"מלון קיאו פרליה קיוטו", lat:34.9985, lon:135.7590, city:"קרסומה גוג'ו, קיוטו", days:"ימים 4-7", note:"396 Gojokarasumacho, Shimogyo-ku"}
+];
+
+var colors={"1-2":"#e63946","3":"#9b5de5","4":"#f4a261","5":"#2a9d8f","6":"#457b9d","7":"#a0522d","8":"#6a0572","9":"#e63946"};
+var dlabels={"1-2":"18-19.2 · תל אביב → טוקיו","3":"20.2 · טוקיו","4":"21.2 · קיוטו","5":"22.2 · קיוטו","6":"23.2 · אוג'י","7":"24.2 · נארה / אוסקה","8":"25.2 · יוקוהמה / טוקיו","9":"26.2 · מפרץ טוקיו → ישראל"};
+
+var curDay = "all";
+var allMarkers = [];
+var allPolylines = [];
+
+// Init map
+var map = L.map('map', {zoomControl:false}).setView([35.2, 137.0], 7);
+L.control.zoom({position:'bottomright'}).addTo(map);
+
+// CartoDB Voyager - free, no API key, English labels
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution:'© OpenStreetMap © CARTO',
+  maxZoom:19,
+  subdomains:'abcd'
+}).addTo(map);
+
+function createIcon(item) {
+  var col = colors[item.day];
+  var html = '<div style="position:relative;width:38px;height:50px">' +
+    '<div style="width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:'+col+';border:2px solid rgba(255,255,255,0.4);box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center">' +
+    '<span style="transform:rotate(45deg);font-size:17px;line-height:1">'+item.icon+'</span>' +
+    '</div>' +
+    '</div>';
+  return L.divIcon({html:html, className:'', iconSize:[38,50], iconAnchor:[19,48]});
+}
+
+function createPopup(item) {
+  var col = colors[item.day];
+  return '<div class="popup-wrap">' +
+    '<div class="pop-top" style="background:linear-gradient(135deg,'+col+'cc,'+col+'44)">' +
+    '<div><div class="pop-name">'+item.icon+' '+item.name+'</div><div class="pop-sub">'+item.en+' · '+item.date+'</div></div>' +
+    '<div class="pop-badge" style="background:'+col+'">יום '+item.day+'</div>' +
+    '</div>' +
+    '<div class="pop-body">' +
+    '<span class="pop-time">⏰ '+item.time+'</span>' +
+    '<hr class="pop-divider">' +
+    '<div class="pop-field"><span class="lbl">🗺️ עיר</span><span class="val">'+item.city+'</span></div>' +
+    '<div class="pop-field"><span class="lbl">🎯 פעילות</span><span class="val">'+item.act+'</span></div>' +
+    '<div class="pop-tip"><div class="pop-tip-lbl">💡 טיפ המסלול</div>'+item.tip+'</div>' +
+    '</div></div>';
+}
+
+// Build markers
+trips.forEach(function(item) {
+  var marker = L.marker([item.lat, item.lon], {icon: createIcon(item)}).addTo(map);
+  marker.bindPopup(createPopup(item), {maxWidth:310, className:''});
+  allMarkers.push({marker:marker, day:item.day, name:item.name});
+});
+
+// Build polylines
+var groups={};
+trips.forEach(function(t){if(!groups[t.day])groups[t.day]=[];groups[t.day].push(t);});
+Object.keys(groups).forEach(function(day){
+  if(groups[day].length<2)return;
+  var latlngs=groups[day].map(function(s){return[s.lat,s.lon];});
+  var poly=L.polyline(latlngs,{color:colors[day],weight:2,opacity:0.4,dashArray:'6,8'}).addTo(map);
+  allPolylines.push({poly:poly,day:day});
+});
+
+// Hotel markers
+function createHotelIcon() {
+  var html = '<div style="position:relative;width:42px;height:52px">' +
+    '<div style="width:42px;height:42px;border-radius:8px;background:#c9a84c;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;flex-direction:column">' +
+    '<span style="font-size:18px;line-height:1">🏨</span>' +
+    '</div>' +
+    '<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #c9a84c;margin:0 auto"></div>' +
+    '</div>';
+  return L.divIcon({html:html, className:'', iconSize:[42,52], iconAnchor:[21,52]});
+}
+
+hotels.forEach(function(h) {
+  var hotelPopup = '<div class="popup-wrap">' +
+    '<div class="pop-top" style="background:linear-gradient(135deg,#9a7d2a,#c9a84c44)">' +
+    '<div><div class="pop-name">🏨 ' + h.nameHe + '</div><div class="pop-sub">' + h.name + '</div></div>' +
+    '<div class="pop-badge" style="background:#c9a84c;color:#0d0d1a">מלון</div>' +
+    '</div>' +
+    '<div class="pop-body">' +
+    '<div class="pop-field"><span class="lbl">🗺️ מיקום</span><span class="val">' + h.city + '</span></div>' +
+    '<div class="pop-field"><span class="lbl">📅 לינה</span><span class="val">' + h.days + '</span></div>' +
+    '<div class="pop-field"><span class="lbl">📍 כתובת</span><span class="val">' + h.note + '</span></div>' +
+    '</div></div>';
+  L.marker([h.lat, h.lon], {icon: createHotelIcon(), zIndexOffset: 1000})
+    .bindPopup(hotelPopup, {maxWidth:310})
+    .addTo(map);
+});
+
+// Sidebar
+function buildSidebar(){
+  var sb=document.getElementById("sidebar");
+  sb.innerHTML="";
+  Object.keys(groups).forEach(function(day){
+    if(curDay!=="all"&&day!==curDay)return;
+    var g=document.createElement("div");g.className="dgroup";
+    var h=document.createElement("div");h.className="dhead";
+    h.innerHTML='<div class="dnum" style="background:'+colors[day]+'">'+day+'</div>'+
+      '<div><div class="dlabel" style="color:'+colors[day]+'">'+dlabels[day]+'</div>'+
+      '<div class="dcount">'+groups[day].length+' עצירות</div></div>';
+    g.appendChild(h);
+    groups[day].forEach(function(item){
+      var s=document.createElement("div");s.className="sitem";s.setAttribute("data-name",item.name);
+      s.style.borderRightColor="transparent";
+      s.innerHTML='<span style="font-size:14px;flex-shrink:0;margin-top:1px">'+item.icon+'</span>'+
+        '<div><div class="sname">'+item.name+'</div>'+
+        '<div class="sact">'+item.act+'</div>'+
+        '<div class="stime">⏰ '+item.time+'</div></div>';
+      s.onclick=function(){
+        document.querySelectorAll('.sitem').forEach(function(x){x.classList.remove('active');x.style.borderRightColor="transparent";});
+        s.classList.add('active');s.style.borderRightColor=colors[day];
+        allMarkers.forEach(function(m){
+          if(m.name===item.name){map.setView([item.lat,item.lon],15,{animate:true});setTimeout(function(){m.marker.openPopup();},400);}
+        });
+      };
+      g.appendChild(s);
+    });
+    sb.appendChild(g);
+  });
+}
+
+function filterDay(day,btn){
+  document.querySelectorAll('.fbtn').forEach(function(b){
+    b.classList.remove('active');
+    b.style.background='rgba(255,255,255,.05)';
+    b.style.borderColor='rgba(201,168,76,.3)';
+    b.style.color='#f0e8d0';
+    b.style.fontWeight='400';
+  });
+  btn.classList.add('active');
+  btn.style.background=day==='all'?'#c9a84c':(colors[day]||'#c9a84c');
+  btn.style.borderColor=btn.style.background;
+  btn.style.color='#fff';
+  btn.style.fontWeight='700';
+  curDay=day;
+
+  allMarkers.forEach(function(m){
+    if(day==='all'||m.day===day){map.addLayer(m.marker);}
+    else{map.removeLayer(m.marker);}
+  });
+  allPolylines.forEach(function(p){
+    if(day==='all'||p.day===day){map.addLayer(p.poly);}
+    else{map.removeLayer(p.poly);}
+  });
+
+  buildSidebar();
+
+  if(day!=='all'){
+    var pts=trips.filter(function(t){return t.day===day;}).map(function(t){return[t.lat,t.lon];});
+    if(pts.length>0)map.fitBounds(pts,{padding:[50,50],animate:true});
+  } else {
+    map.setView([35.2,137.0],7,{animate:true});
+  }
+}
+
+buildSidebar();
+
+// Style initial active button
+var ab=document.querySelector('.fbtn.active');
+ab.style.background='#c9a84c';ab.style.borderColor='#c9a84c';ab.style.color='#fff';ab.style.fontWeight='700';
+</script>
+</body>
+</html>
